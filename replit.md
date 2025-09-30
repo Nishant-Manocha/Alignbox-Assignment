@@ -2,7 +2,15 @@
 
 ## Overview
 
-This is a real-time anonymous chat application that allows multiple users to communicate in a group setting while maintaining anonymity. Built with Node.js, Express, and Socket.IO, the application provides instant messaging capabilities with live user count tracking. Users appear as "Anonymous" by default and can see who's currently online in the chat room.
+This is a real-time anonymous chat application that allows multiple users to communicate in a group setting while maintaining anonymity. Built with Node.js, Express, Socket.IO, and PostgreSQL, the application provides instant messaging capabilities with live user count tracking and persistent message storage. Users must enter their name on startup and can toggle between showing their real name or appearing as "Anonymous" using the header button.
+
+## Recent Changes (September 30, 2025)
+
+- **PostgreSQL Integration:** All messages are now stored in a PostgreSQL database with proper schema (username, message, is_anonymous, timestamp)
+- **Username Entry Modal:** Users must enter their name before accessing the chat interface
+- **Anonymous Toggle Button:** Added button in the header to switch between displaying real name and "Anonymous"
+- **Message History:** When users connect, they receive the last 100 messages from the database
+- **Database Persistence:** All chat messages are automatically saved to PostgreSQL for permanent storage
 
 ## User Preferences
 
@@ -16,6 +24,8 @@ Preferred communication style: Simple, everyday language.
 - **Runtime:** Node.js
 - **Web Framework:** Express 5.1.0
 - **Real-time Communication:** Socket.IO 4.8.1
+- **Database:** PostgreSQL (via pg client library)
+- **Message Persistence:** All messages stored in PostgreSQL database
 
 **Server Design:**
 The application uses a single-server architecture with WebSocket support for bidirectional real-time communication. The server handles:
@@ -33,8 +43,8 @@ The application uses a single-server architecture with WebSocket support for bid
 
 *Message Broadcasting:*
 - **Problem:** All users need to see messages instantly
-- **Solution:** `io.emit()` broadcasts to all connected clients
-- **Rationale:** Simple broadcast pattern works well for small group chats; no message persistence required
+- **Solution:** `io.emit()` broadcasts to all connected clients and saves to PostgreSQL database
+- **Rationale:** Broadcast pattern ensures real-time delivery while database persistence maintains message history
 
 *Session Management:*
 - **Problem:** Identify message senders without requiring authentication
@@ -83,7 +93,6 @@ Single-page application with real-time UI updates driven by WebSocket events.
 
 - **Event-Driven Architecture:** All interactions use publish-subscribe pattern via Socket.IO
 - **Broadcast Communication:** Server broadcasts state changes to all connected clients
-- **Stateless Messages:** No server-side message persistence; ephemeral chat only
 - **Client-Side Rendering:** All UI updates handled in browser via DOM manipulation
 
 ## External Dependencies
@@ -104,17 +113,20 @@ Single-page application with real-time UI updates driven by WebSocket events.
 
 **Node.js Built-ins:**
 - `http` module: Creates HTTP server instance that Socket.IO wraps
-- No database or external storage services used
+
+**PostgreSQL Database:**
+- `pg` module: PostgreSQL client for Node.js
+- Database URL configured via environment variables
+- Message table schema: id, username, message, is_anonymous, timestamp, created_at
 
 ### Development Considerations
 
 **Scalability Limitations:**
 - In-memory user count won't sync across multiple server instances
 - No load balancer or sticky session support configured
-- No message history or persistence layer
 
 **Potential Enhancements Would Require:**
 - Redis adapter for Socket.IO to enable multi-server deployments
-- Database (e.g., PostgreSQL, MongoDB) for message persistence
-- Authentication service for optional user accounts
+- User authentication service for optional user accounts
 - Rate limiting middleware to prevent spam
+- Message pagination for better performance with large message history
